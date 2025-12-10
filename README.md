@@ -1,4 +1,4 @@
-<h1 align="center">Name Magetsu002</h1>
+<h1 align="center">Magetsu002</h1>
 <h3 align="center">Exploring backend development, Linux tooling, automation, and applied AI.</h3>
 
 <p align="left"> <a href="https://github.com/ryo-ma/github-profile-trophy"><img src="https://github-profile-trophy.vercel.app/?username=magetsu002" alt="magetsu002" /></a> </p>
