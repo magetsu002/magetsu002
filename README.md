@@ -1,6 +1,6 @@
 # Magetsu002
 
-Exploring backend development, Linux tooling, automation, and applied AI.
+`Exploring backend development, Linux tooling, automation, and applied AI.`
 
 ---
 
