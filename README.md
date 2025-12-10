@@ -13,13 +13,17 @@
 
 ## 🔥 Experienced In
 - Linux  
-- Scripting & automation  
+- Scripting & automation                            
 - Backend logic  
-- Development workflows  
+- Development workflows                                                                                                            <p align="center">
+                                       <img src="https://user-images.githubusercontent.com/5713670/87202985-820dcb80-c2b6-11ea-9f56-7ec461c497c3.gif" width="350">
+                                             </p>
+
 
 ---
 
-## </> Languages And Tools
+## </> Languages And Tools <img src="https://media.tenor.com/CDtvYV87MB0AAAAi/neko-cat.gif" width="40">
+
 **Languages:**  
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
@@ -67,6 +71,6 @@ but you can follow my progress here:
 > I prefer building quietly and showing results later.
 
 
-<p align="center">
-  <img src="https://media.tenor.com/Pcmey4s5RgkAAAAi/anime-phim.gif" alt="Anime GIF" width="300">
-</p>
+<p align="center"> 
+  <img src="https://media.tenor.com/Pcmey4s5RgkAAAAi/anime-phim.gif" alt="Anime GIF" width="300"> <p align="center">
+  </p>
