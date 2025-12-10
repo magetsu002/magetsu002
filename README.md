@@ -4,14 +4,14 @@ Exploring backend development, Linux tooling, automation, and applied AI.
 
 ---
 
-## 🧭 What I'm Working On
+##  What I'm Working On
 - Developing personal tools, scripts, and backend projects  
 - Strengthening my foundation in systems programming  
 - Learning AI fundamentals and low-level concepts that support efficient implementations  
 
 ---
 
-## 💬 Ask Me About
+##  Ask Me About
 - Linux  
 - Scripting & automation  
 - Backend logic  
@@ -19,7 +19,7 @@ Exploring backend development, Linux tooling, automation, and applied AI.
 
 ---
 
-## 🛠️ Technologies & Interests
+##  Technologies & Interests
 **Languages:**  
 Bash, JavaScript, Python  
 
@@ -31,7 +31,7 @@ C, backend systems, AI fundamentals
 
 ---
 
-## 📂 Projects
+##  Projects
 Most of my work is currently private as I build my foundation,  
 but you can follow my progress here:
 
@@ -39,5 +39,5 @@ but you can follow my progress here:
 
 ---
 
-## 🖤 Fun Fact
+##  Fun Fact
 > I prefer building quietly and showing results later.
