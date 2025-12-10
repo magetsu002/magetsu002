@@ -65,3 +65,8 @@ but you can follow my progress here:
 
 ## ` Fun Fact `
 > I prefer building quietly and showing results later.
+
+
+<p align="center">
+  <img src="https://media.tenor.com/Pcmey4s5RgkAAAAi/anime-phim.gif" alt="Anime GIF" width="300">
+</p>
