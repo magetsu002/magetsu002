@@ -23,7 +23,7 @@
 
 ---
 
-## </> Languages And Tools <img src="https://media.tenor.com/CDtvYV87MB0AAAAi/neko-cat.gif" width="40">
+## </> Languages And Tools 
 
 **Languages:**  
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
@@ -70,7 +70,13 @@ but you can follow my progress here:
 
 ## ` Fun Fact `
 > Here's a playlist I keep running while I work:
-> **https://www.youtube.com/playlist?list=PLoLEVdZkMSxvdK86_KsfvCQYEY8eRZJLb**
+<p align="left">
+  <a href="https://www.youtube.com/playlist?list=PLoLEVdZkMSxvdK86_KsfvCQYEY8eRZJLb" target="_blank">
+    <img src="https://img.shields.io/badge/YouTube%20Playlist-FF0000?style=for-the-badge&logo=youtube&logoColor=white" />
+  </a>
+</p>
+
+
 
 
 
