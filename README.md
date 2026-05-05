@@ -3,10 +3,10 @@
 # Magetsu002
 
 <p align="center">
-  <img width="1000" height="300" alt="terminal" src="https://github.com/user-attachments/assets/21f99dec-7085-46c5-8e5b-c7f798d9f6f7" />
+ <img width="1000" height="450" alt="terminal" src="https://github.com/user-attachments/assets/794ae0cc-d704-4849-95a7-7a3ab02666c1" />
 </p>
----
 
+---
 ## 🔥 What I'm Doing Right Now
 
 ▸ building backend and system-style projects  
