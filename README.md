@@ -154,18 +154,14 @@ I use projects to connect theory with practical implementation, whether that mea
 
 ---
 
-## GitHub Activity
+## GitHub Contributions
 
 <p align="center">
   <a href="https://github.com/magetsu002">
     <img
       width="100%"
-      src="https://github-readme-activity-graph.vercel.app/graph?username=magetsu002&theme=react-dark&hide_border=true&area=true&custom_title=Development%20Activity"
-      alt="Magetsu GitHub activity graph"
+      src="https://github-readme-activity-graph.vercel.app/graph?username=magetsu002&theme=react-dark&hide_border=true&area=true&custom_title=%E2%80%83Contribution%20History"
+      alt="Magetsu GitHub contribution history"
     />
   </a>
-</p>
-
-<p align="center">
-  <sub>Building, learning, testing, and improving one layer at a time.</sub>
 </p>
