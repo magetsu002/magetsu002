@@ -1,167 +1,148 @@
-<h1 align="center">Magetsu</h1>
+# Aster Kernel v0.5.1 — real IPv4 networking
 
-<p align="center">
-  Building across software, systems, and hardware.
-</p>
+> **Project status:** experimental educational kernel. Aster runs entirely in ring 0 and is not suitable for real hardware or production use.
 
-<p align="center">
-  <img
-    src="https://img.shields.io/badge/Full%20Stack-111111?style=flat-square"
-    alt="Full Stack"
-  />
-  <img
-    src="https://img.shields.io/badge/Systems-111111?style=flat-square"
-    alt="Systems"
-  />
-  <img
-    src="https://img.shields.io/badge/Embedded-111111?style=flat-square"
-    alt="Embedded"
-  />
-  <img
-    src="https://img.shields.io/badge/Linux-111111?style=flat-square&logo=linux&logoColor=white"
-    alt="Linux"
-  />
-</p>
+Aster is a clean-room educational x86-64 kernel written in freestanding C and assembly. It does not copy Linux source and is not Linux-compatible yet.
 
-<p align="center">
-  <img
-    width="1000"
-    alt="Terminal setup"
-    src="https://github.com/user-attachments/assets/794ae0cc-d704-4849-95a7-7a3ab02666c1"
-  />
-</p>
+## What v0.5 adds
 
----
+- Legacy PCI configuration-space enumeration
+- Realtek RTL8139 PCI Ethernet driver using port I/O and bus-master DMA
+- Polling receive ring and four transmit descriptors
+- Ethernet II frame transmission and reception
+- ARP requests, replies, and a small ARP cache
+- Static IPv4 configuration for QEMU user-mode networking
+- IPv4 header construction, routing, and checksums
+- UDP transmission and reception
+- DNS A-record queries through QEMU's DNS proxy
+- Real ICMP echo requests and replies
+- PIT-calibrated TSC timing for millisecond ping results
+- `net` / `ifconfig` interface dashboard
+- `ping google.com`, `ping 1.1.1.1`, and other IPv4 hosts
+- The original `ping aster` ring-0 self-test remains available
 
-## What I’m Building Toward
-
-I am developing across three connected areas: full stack software, systems programming, and embedded hardware.
-
-I enjoy understanding how complete products are designed and built, from the interface someone interacts with, to the backend and infrastructure supporting it, to the firmware and electronics controlling physical devices.
-
-Rather than limiting myself to one layer, I want to understand how these layers connect, communicate, fail, and improve together.
+The QEMU profile is:
 
 ```text
-Full stack software     → interfaces, APIs, databases, product architecture
-Systems programming     → C, C++, Linux, tooling, performance, reliability
-Embedded development    → microcontrollers, firmware, circuits, communication
-Security and quality    → validation, testing, debugging, maintainability
+NIC       RTL8139
+MAC       52:54:00:12:34:56
+IPv4      10.0.2.15/24
+Gateway   10.0.2.2
+DNS       10.0.2.3
+Backend   QEMU user-mode NAT
 ```
 
-Most of my current work remains private while it is being built, tested, documented, and refined.
+This is a deliberately small polling stack. It does not yet include DHCP, TCP, sockets, IPv6, fragmentation, or NIC interrupts.
 
----
-
-## Current Focus
-
-<table>
-  <tr>
-    <td width="33%" valign="top">
-      <h3>Software</h3>
-      <p>
-        Building complete web applications with TypeScript, React, Next.js,
-        backend APIs, and relational databases.
-      </p>
-    </td>
-    <td width="33%" valign="top">
-      <h3>Systems</h3>
-      <p>
-        Going deeper into C, C++, Linux, networking, automation, and the
-        lower layers that software depends on.
-      </p>
-    </td>
-    <td width="33%" valign="top">
-      <h3>Hardware</h3>
-      <p>
-        Working with microcontrollers, firmware, circuits, communication
-        interfaces, schematics, and PCB design.
-      </p>
-     <br />
-    </td>
-  </tr>
-</table>
-
----
-
-## What I Care About
+## Repository layout
 
 ```text
-Clear architecture
-Intentional interfaces
-Secure data flow
-Reliable behavior
-Useful testing
-Maintainable code
-Real understanding
+arch/x86_64/    bootstrap, IDT, and interrupt stubs
+include/aster/  kernel interfaces
+kernel/         console, shell, timing, PCI, NIC, and network stack
+grub/           Multiboot2 boot menu
+scripts/        QEMU launcher and build validation
+docs/           development roadmap
 ```
 
-I use projects to connect theory with practical implementation, whether that means designing an interface, structuring a backend, debugging a Linux system, writing firmware, or bringing a hardware prototype to life.
+## Current limitations
 
----
-## Technologies I Use
+- single-core and polling-based;
+- no userspace, processes, scheduler, or syscall ABI;
+- no virtual filesystem or persistent storage;
+- static QEMU IPv4 configuration;
+- no TCP, DHCP, IPv6, fragmentation, or NIC interrupts;
+- intended for QEMU's RTL8139 device, not arbitrary physical hardware.
 
-<br />
+## Arch Linux / CachyOS dependencies
 
-<p align="center">
-  <img
-    src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"
-    alt="TypeScript"
-  />
-  <img
-    src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB"
-    alt="React"
-  />
-  <img
-    src="https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white"
-    alt="Next.js"
-  />
-  <img
-    src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white"
-    alt="Node.js"
-  />
-  <img
-    src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"
-    alt="PostgreSQL"
-  />
-</p>
+```bash
+sudo pacman -S --needed \
+  base-devel clang lld \
+  qemu-system-x86 qemu-ui-gtk \
+  grub xorriso mtools unzip patch
+```
 
-<p align="center">
-  <img
-    src="https://img.shields.io/badge/C-00599C?style=flat-square&logo=c&logoColor=white"
-    alt="C"
-  />
-  <img
-    src="https://img.shields.io/badge/C++-00599C?style=flat-square&logo=cplusplus&logoColor=white"
-    alt="C++"
-  />
-  <img
-    src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white"
-    alt="Python"
-  />
-  <img
-    src="https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black"
-    alt="Linux"
-  />
-  <img
-    src="https://img.shields.io/badge/Embedded%20Hardware-5C4C9F?style=flat-square&logo=microchip&logoColor=white"
-    alt="Embedded Hardware"
-  />
-  <img
-    src="https://img.shields.io/badge/Cybersecurity-111927?style=flat-square&logo=hackthebox&logoColor=9FEF00"
-    alt="Cybersecurity"
-  />
-</p>
+`qemu-ui-sdl` can replace `qemu-ui-gtk`.
 
----
+## Build and run
 
-## GitHub Contributions
+```bash
+make clean check
+make run
+```
 
-<p align="center">
-  <a href="https://github.com/magetsu002">
-    <img
-      width="100%"
-      src="https://github-readme-activity-graph.vercel.app/graph?username=magetsu002&theme=react-dark&hide_border=true&area=true&custom_title=%E2%80%83Contribution%20History"
-      alt="Magetsu GitHub contribution history"
-    />
-  </a>
-</p>
+For a terminal-only session:
+
+```bash
+make run-headless
+```
+
+The launch script explicitly attaches an RTL8139 card to QEMU's user-mode network backend. Click inside the QEMU window before typing, or type directly in the host terminal in headless mode.
+
+## Try the network
+
+```text
+net
+ping google.com
+ping 1.1.1.1
+ping 8.8.8.8
+ping aster
+```
+
+`ping google.com` performs all of these inside Aster:
+
+1. ARP resolution for the QEMU DNS proxy.
+2. A UDP DNS query for an IPv4 A record.
+3. ARP resolution for the default gateway.
+4. Four genuine ICMP echo requests.
+5. ICMP reply parsing and RTT calculation.
+
+## Shell commands
+
+```text
+help          Show the command index
+clear         Clear and redraw the console
+about         Describe the kernel
+sysinfo       Show CPU, RAM, addresses, and subsystem status
+cpu           Read the CPU vendor through CPUID
+mem           Show usable Multiboot2 memory
+net           Show NIC, MAC, IPv4, gateway, DNS, and stack status
+ifconfig      Alias for net
+ping HOST     Resolve and ping a hostname or IPv4 address
+echo TEXT     Print text through VGA and COM1
+color NAME    Change the prompt accent color
+demo          Draw a VGA color demonstration
+banner        Redraw the console banner
+uname         Print the kernel version
+whoami        Print the current ring-0 identity
+pwd           Print the current pseudo-path
+reboot        Reset through the 8042 controller
+halt          Halt the virtual CPU
+```
+
+Aster's terminal is still a kernel monitor. Every command executes directly in ring 0; there is no userspace, scheduler, VFS, or process isolation yet.
+
+## Network troubleshooting
+
+If the interface is missing, use the supplied `make run` or `make run-headless` target rather than launching QEMU manually. The `net` command should show `Realtek RTL8139` and `10.0.2.15/24`.
+
+If DNS succeeds but all external ICMP requests time out, inspect the host setting:
+
+```bash
+cat /proc/sys/net/ipv4/ping_group_range
+```
+
+For a local development machine, a temporary permissive setting is:
+
+```bash
+sudo sysctl -w net.ipv4.ping_group_range='0 2147483647'
+```
+
+Then restart QEMU and retry.
+
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the longer architecture plan.
+
+## v0.5.1 CPU-state fix
+
+The long-mode bootstrap now enables x87/SSE state before entering C. This fixes `CPU exception 6` during `net_init()` when Clang vectorizes a memory-clear loop into `xorps`/`movaps`. The kernel also initializes MXCSR to the architectural default (`0x1F80`) before any optimized C code runs.
