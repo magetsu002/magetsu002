@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+mkdir -p "$HOME/.config/hypr"
+curl -fsSL https://raw.githubusercontent.com/magetsu002/magetsu002/a/hypr-minimal.conf -o "$HOME/.config/hypr/hyprland.conf"
+exec Hyprland
