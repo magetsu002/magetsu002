@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+LOG=/tmp/new-arch-firstboot-prep.log
+exec > >(tee -a "$LOG") 2>&1
+trap 'rc=$?; echo; echo "FAILED at line $LINENO (exit $rc)"; echo "Nothing will reboot automatically."; exit $rc' ERR
+
+MNT=/mnt
+USER_NAME=magetsu
+HOST_NAME=predator
+
+ROOT_PARTUUID=ebefec21-13f8-42b7-b541-be2fa2ffe13f
+BOOT_PARTUUID=54b861fd-685c-476f-b580-3051c1ba7d79
+ROOT_UUID=ce979d1c-c145-4be0-9ce3-591b6fd0a3a1
+BOOT_UUID=30B5-B3B9
+
+BACKUP_UUID=1411e6f3-209c-4e53-9860-cf920a7fce2b
+OLD_ROOT_PARTUUID=8b701eb6-c0d6-4422-95b7-1924c9d3f6b2
+OLD_EFI_PARTUUID=63ec43fc-b35d-4ec4-a097-68ea3a6b645c
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+resolve_part() { blkid -t "PARTUUID=$1" -o device | head -n1; }
+
+[[ $EUID -eq 0 ]] || fail "run from root@archiso"
+[[ -d /sys/firmware/efi/efivars ]] || fail "not booted in UEFI mode"
+[[ -x /usr/bin/arch-chroot ]] || fail "arch-chroot missing"
+
+ROOT_DEV="$(resolve_part "$ROOT_PARTUUID")"
+BOOT_DEV="$(resolve_part "$BOOT_PARTUUID")"
+OLD_ROOT_DEV="$(resolve_part "$OLD_ROOT_PARTUUID")"
+OLD_EFI_DEV="$(resolve_part "$OLD_EFI_PARTUUID")"
+BACKUP_DEV="$(blkid -t "UUID=$BACKUP_UUID" -o device | head -n1 || true)"
+
+[[ -b "$ROOT_DEV" ]] || fail "new root PARTUUID not found"
+[[ -b "$BOOT_DEV" ]] || fail "new EFI PARTUUID not found"
+[[ -b "$OLD_ROOT_DEV" ]] || fail "old Arch root no longer detected"
+[[ -b "$OLD_EFI_DEV" ]] || fail "old Arch EFI no longer detected"
+[[ -b "$BACKUP_DEV" ]] || fail "migration backup no longer detected"
+
+[[ "$(blkid -s UUID -o value "$ROOT_DEV")" == "$ROOT_UUID" ]] || fail "new root UUID mismatch"
+[[ "$(blkid -s TYPE -o value "$ROOT_DEV")" == "btrfs" ]] || fail "new root is not btrfs"
+[[ "$(blkid -s UUID -o value "$BOOT_DEV")" == "$BOOT_UUID" ]] || fail "new EFI UUID mismatch"
+[[ "$(blkid -s TYPE -o value "$BOOT_DEV")" == "vfat" ]] || fail "new EFI is not vfat"
+
+ROOT_SOURCE="$(findmnt -n -o SOURCE --target "$MNT" || true)"
+ROOT_SOURCE="${ROOT_SOURCE%%[*}"
+BOOT_SOURCE="$(findmnt -n -o SOURCE --target "$MNT/boot" || true)"
+ROOT_OPTS="$(findmnt -n -o OPTIONS --target "$MNT" || true)"
+
+[[ "$ROOT_SOURCE" == "$ROOT_DEV" ]] || fail "/mnt is $ROOT_SOURCE, expected $ROOT_DEV"
+[[ "$BOOT_SOURCE" == "$BOOT_DEV" ]] || fail "/mnt/boot is $BOOT_SOURCE, expected $BOOT_DEV"
+[[ "$ROOT_OPTS" == *"subvol=/@"* || "$ROOT_OPTS" == *"subvol=@"* ]] || fail "/mnt is not Btrfs @"
+
+declare -A EXPECTED
+EXPECTED["$MNT"]="$ROOT_DEV"
+EXPECTED["$MNT/home"]="$ROOT_DEV"
+EXPECTED["$MNT/.snapshots"]="$ROOT_DEV"
+EXPECTED["$MNT/var/log"]="$ROOT_DEV"
+EXPECTED["$MNT/boot"]="$BOOT_DEV"
+
+for target in "$MNT" "$MNT/home" "$MNT/.snapshots" "$MNT/var/log" "$MNT/boot"; do
+    src="$(findmnt -n -o SOURCE --target "$target" || true)"
+    src="${src%%[*}"
+    [[ "$src" == "${EXPECTED[$target]}" ]] || fail "wrong mount at $target: $src"
+done
+
+if findmnt -R -n -o SOURCE "$MNT" | grep -Fq "$OLD_ROOT_DEV"; then
+    fail "old Arch root is mounted inside new system"
+fi
+if findmnt -R -n -o SOURCE "$MNT" | grep -Fq "$OLD_EFI_DEV"; then
+    fail "old Arch EFI is mounted inside new system"
+fi
+if findmnt -R -n -o SOURCE "$MNT" | grep -Fq "$BACKUP_DEV"; then
+    fail "migration backup is mounted inside new system"
+fi
+
+echo "============================================================"
+echo " PRE-FLIGHT PASSED"
+echo "============================================================"
+echo "new root : $ROOT_DEV  UUID=$ROOT_UUID"
+echo "new EFI  : $BOOT_DEV  UUID=$BOOT_UUID"
+echo "old root : $OLD_ROOT_DEV  PRESERVED"
+echo "old EFI  : $OLD_EFI_DEV  PRESERVED"
+echo "backup   : $BACKUP_DEV  PRESERVED"
+echo
+
+[[ -s "$MNT/etc/fstab" ]] || fail "fstab missing"
+for mp in / /home /.snapshots /var/log /boot; do
+    count="$(awk -v m="$mp" '$1 !~ /^#/ && $2 == m {n++} END{print n+0}' "$MNT/etc/fstab")"
+    [[ "$count" -eq 1 ]] || fail "fstab has $count entries for $mp"
+done
+grep -F 'subvol=/@home' "$MNT/etc/fstab" >/dev/null || fail "fstab @home missing"
+grep -F 'subvol=/@snapshots' "$MNT/etc/fstab" >/dev/null || fail "fstab @snapshots missing"
+grep -F 'subvol=/@var_log' "$MNT/etc/fstab" >/dev/null || fail "fstab @var_log missing"
+
+ln -sf /usr/share/zoneinfo/Asia/Dubai "$MNT/etc/localtime"
+sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' "$MNT/etc/locale.gen"
+printf 'LANG=en_US.UTF-8\n' > "$MNT/etc/locale.conf"
+printf 'KEYMAP=us\n' > "$MNT/etc/vconsole.conf"
+printf '%s\n' "$HOST_NAME" > "$MNT/etc/hostname"
+printf '127.0.0.1\tlocalhost\n::1\tlocalhost\n127.0.1.1\t%s.localdomain %s\n' "$HOST_NAME" "$HOST_NAME" > "$MNT/etc/hosts"
+
+arch-chroot "$MNT" locale-gen
+arch-chroot "$MNT" hwclock --systohc
+
+if ! arch-chroot "$MNT" id "$USER_NAME" >/dev/null 2>&1; then
+    arch-chroot "$MNT" useradd -m -G wheel -s /bin/bash "$USER_NAME"
+else
+    arch-chroot "$MNT" usermod -aG wheel -s /bin/bash "$USER_NAME"
+fi
+
+install -d -m 0755 "$MNT/etc/sudoers.d"
+printf '%s ALL=(ALL:ALL) ALL\n' "$USER_NAME" > "$MNT/etc/sudoers.d/10-$USER_NAME"
+chmod 0440 "$MNT/etc/sudoers.d/10-$USER_NAME"
+arch-chroot "$MNT" visudo -cf /etc/sudoers
+
+arch-chroot "$MNT" systemctl enable NetworkManager.service
+arch-chroot "$MNT" mkinitcpio -P
+
+[[ -s "$MNT/boot/vmlinuz-linux" ]] || fail "new kernel missing"
+[[ -s "$MNT/boot/initramfs-linux.img" ]] || fail "new initramfs missing"
+[[ -s "$MNT/boot/intel-ucode.img" ]] || fail "Intel microcode missing"
+[[ -s "$MNT/usr/lib/systemd/boot/efi/systemd-bootx64.efi" ]] || fail "systemd-boot source binary missing"
+
+install -d -m 0755 "$MNT/boot/EFI/systemd" "$MNT/boot/EFI/BOOT" "$MNT/boot/loader/entries"
+install -m 0644 "$MNT/usr/lib/systemd/boot/efi/systemd-bootx64.efi" \
+    "$MNT/boot/EFI/systemd/systemd-bootx64.efi"
+install -m 0644 "$MNT/usr/lib/systemd/boot/efi/systemd-bootx64.efi" \
+    "$MNT/boot/EFI/BOOT/BOOTX64.EFI"
+
+cat > "$MNT/boot/loader/loader.conf" <<'EOF'
+default arch-new.conf
+timeout 5
+console-mode max
+editor no
+EOF
+
+cat > "$MNT/boot/loader/entries/arch-new.conf" <<EOF
+title   Arch Linux (new test)
+linux   /vmlinuz-linux
+initrd  /intel-ucode.img
+initrd  /initramfs-linux.img
+options root=UUID=$ROOT_UUID rootflags=subvol=@ rw
+EOF
+
+PASS_STATE="$(arch-chroot "$MNT" passwd -S "$USER_NAME" | awk '{print $2}')"
+if [[ "$PASS_STATE" != P ]]; then
+    echo
+    echo "============================================================"
+    echo " SET PASSWORD FOR $USER_NAME"
+    echo "============================================================"
+    arch-chroot "$MNT" passwd "$USER_NAME"
+fi
+
+arch-chroot "$MNT" passwd -l root >/dev/null 2>&1 || true
+
+DISK="/dev/$(lsblk -n -o PKNAME "$BOOT_DEV")"
+PARTN="$(lsblk -n -o PARTN "$BOOT_DEV")"
+[[ -b "$DISK" ]] || fail "parent disk for new EFI not found"
+[[ "$PARTN" =~ ^[0-9]+$ ]] || fail "new EFI partition number invalid"
+
+BEFORE_ORDER="$(efibootmgr | sed -n 's/^BootOrder: //p')"
+[[ -n "$BEFORE_ORDER" ]] || fail "could not read current BootOrder"
+
+ENTRY_LINE="$(efibootmgr -v | grep -Fi 'Arch Linux New Test' | grep -Fi "$BOOT_PARTUUID" | head -n1 || true)"
+if [[ -z "$ENTRY_LINE" ]]; then
+    efibootmgr -C -d "$DISK" -p "$PARTN" -L 'Arch Linux New Test' -l '\EFI\systemd\systemd-bootx64.efi'
+    ENTRY_LINE="$(efibootmgr -v | grep -Fi 'Arch Linux New Test' | grep -Fi "$BOOT_PARTUUID" | head -n1 || true)"
+fi
+
+BOOTNUM="$(sed -n 's/^Boot\([0-9A-Fa-f]\{4\}\).*/\1/p' <<<"$ENTRY_LINE")"
+[[ -n "$BOOTNUM" ]] || fail "could not identify the new UEFI entry"
+
+AFTER_ORDER="$(efibootmgr | sed -n 's/^BootOrder: //p')"
+if [[ "$AFTER_ORDER" != "$BEFORE_ORDER" ]]; then
+    echo "BootOrder changed unexpectedly; restoring original BootOrder."
+    efibootmgr -o "$BEFORE_ORDER"
+    fail "create-only did not preserve BootOrder"
+fi
+
+efibootmgr -n "$BOOTNUM"
+
+FINAL_ORDER="$(efibootmgr | sed -n 's/^BootOrder: //p')"
+FINAL_NEXT="$(efibootmgr | sed -n 's/^BootNext: //p')"
+[[ "$FINAL_ORDER" == "$BEFORE_ORDER" ]] || fail "BootOrder changed after BootNext"
+[[ "${FINAL_NEXT^^}" == "${BOOTNUM^^}" ]] || fail "BootNext verification failed"
+
+touch "$MNT/root/FIRST_BOOT_READY"
+cp "$LOG" "$MNT/root/firstboot-prep.log" 2>/dev/null || true
+sync
+
+echo
+echo "============================================================"
+echo " FIRST BOOT READY"
+echo "============================================================"
+echo "BootOrder : $FINAL_ORDER  (UNCHANGED)"
+echo "BootNext  : $FINAL_NEXT  (NEW ARCH, ONE SHOT)"
+echo
+echo "No package downloads were required."
+echo "Old Arch p1+p2 remains intact."
+echo "Migration backup remains intact."
+echo "Nothing will reboot automatically."
+echo
+echo "Send a photo of this screen BEFORE rebooting."
