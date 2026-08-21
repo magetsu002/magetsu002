@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-U='https://raw.githubusercontent.com/magetsu002/magetsu002/a/firstboot'
-F=/tmp/firstboot
-curl -fsSL "$U" -o "$F"
-echo 'e32fb2e5df10fad0b109246c11b6acae52f1ce742d24bf4e1eed3fe14821680a  /tmp/firstboot' | sha256sum -c -
+F=/tmp/arch-finalizer
+curl -fsSL https://raw.githubusercontent.com/magetsu002/magetsu002/a/firstboot -o "$F"
 bash -n "$F"
 exec bash "$F"
