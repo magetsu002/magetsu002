@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [[ $EUID -eq 0 ]]; then
+  echo 'Run this as magetsu, not root.' >&2
+  exit 1
+fi
+
+echo '[1/4] Installing a real login/session manager'
+sudo pacman -S --needed --noconfirm sddm
+
+echo '[2/4] Installing clean minimal Hyprland config'
+mkdir -p "$HOME/.config/hypr"
+curl -fsSL https://raw.githubusercontent.com/magetsu002/magetsu002/a/hypr-minimal.lua \
+  -o "$HOME/.config/hypr/hyprland.lua"
+rm -f "$HOME/.config/hypr/hyprland.conf"
+
+SESSION=/usr/share/wayland-sessions/hyprland.desktop
+[[ -f "$SESSION" ]] || {
+  echo "ERROR: $SESSION is missing" >&2
+  exit 1
+}
+
+echo '[3/4] Making graphical login the default for NEW Arch'
+sudo systemctl set-default graphical.target
+sudo systemctl enable sddm.service
+
+echo '[4/4] Starting SDDM now'
+echo 'When the login screen appears: log in as magetsu. Hyprland should be the only/selected Wayland session.'
+sudo systemctl start sddm.service
