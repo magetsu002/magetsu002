@@ -154,3 +154,15 @@ I use projects to connect theory with practical implementation, whether that mea
 
 ---
 
+## GitHub Contributions
+
+<p align="center">
+  <a href="https://github.com/magetsu002">
+    <img
+      width="520"
+      src="https://streak-stats.demolab.com?user=magetsu002&theme=react&hide_border=true&background=0d1117&stroke=0d1117&card_width=520"
+      alt="Magetsu GitHub contribution stats"
+    />
+  </a>
+</p>
+
